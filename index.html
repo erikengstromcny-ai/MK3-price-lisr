@@ -45,9 +45,21 @@ function currentState(){return {p:document.getElementById('platform').value,s:se
 function applyState(st){if(!st)return;document.getElementById('platform').value=st.p||'BHP';var checks=document.querySelectorAll('.item input[type=checkbox]');for(var i=0;i<checks.length;i++)checks[i].checked=false;for(var j=0;j<(st.s||[]).length;j++){var id=st.s[j][0],cb=document.querySelector('[data-id="'+id+'"]');if(cb){cb.checked=true;var rg=document.querySelector('[data-range="'+id+'"]');if(rg&&st.s[j][1]!=null)rg.value=st.s[j][1];}}recalc();}
 function saveBuild(){try{localStorage.setItem('mk3Build',JSON.stringify(currentState()));statusMsg('Build saved on this device.');}catch(e){statusMsg('Could not save in this browser.');}}
 function loadSaved(){try{var x=localStorage.getItem('mk3Build');if(x)applyState(JSON.parse(x));}catch(e){}}
-function encodedState(){return btoa(unescape(encodeURIComponent(JSON.stringify(currentState())))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
-function shareBuild(){var url=location.origin+location.pathname+'?build='+encodedState();if(navigator.share){navigator.share({title:'MK3 Hi-Power Build',text:'My MK3 Hi-Power build',url:url}).catch(function(){});}else if(navigator.clipboard){navigator.clipboard.writeText(url).then(function(){statusMsg('Share link copied.');});}else{prompt('Copy this link:',url);}}
-function loadFromURL(){var m=location.search.match(/[?&]build=([^&]+)/);if(!m)return false;try{var v=m[1].replace(/-/g,'+').replace(/_/g,'/');while(v.length%4)v+='=';applyState(JSON.parse(decodeURIComponent(escape(atob(v)))));return true;}catch(e){return false;}}
+function encodedState(){return encodeURIComponent(JSON.stringify(currentState()));}
+function shareBuild(){var url=location.origin+location.pathname+'#build='+encodedState();if(navigator.share){navigator.share({title:'MK3 Hi-Power Build',text:'My MK3 Hi-Power build',url:url}).catch(function(){});}else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(function(){statusMsg('Share link copied.');});}else{prompt('Copy this link:',url);}}
+function loadFromURL(){
+ var raw='';
+ if(location.hash.indexOf('#build=')===0) raw=location.hash.substring(7);
+ if(!raw){var m=location.search.match(/[?&]build=([^&]+)/);if(m)raw=m[1];}
+ if(!raw)return false;
+ try{
+  var st;
+  try{st=JSON.parse(decodeURIComponent(raw));}
+  catch(firstErr){var v=raw.replace(/-/g,'+').replace(/_/g,'/');while(v.length%4)v+='=';st=JSON.parse(decodeURIComponent(escape(atob(v))));}
+  applyState(st);
+  return true;
+ }catch(e){return false;}
+}
 function statusMsg(x){document.getElementById('status').textContent=x;}
 
 window.onload=function(){var shared=loadFromURL();if(!shared)loadSaved();recalc();if(shared)openSummary();};
