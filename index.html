@@ -50,5 +50,5 @@ function shareBuild(){var url=location.origin+location.pathname+'?build='+encode
 function loadFromURL(){var m=location.search.match(/[?&]build=([^&]+)/);if(!m)return false;try{var v=m[1].replace(/-/g,'+').replace(/_/g,'/');while(v.length%4)v+='=';applyState(JSON.parse(decodeURIComponent(escape(atob(v)))));return true;}catch(e){return false;}}
 function statusMsg(x){document.getElementById('status').textContent=x;}
 
-window.onload=function(){if(!loadFromURL())loadSaved();recalc();};
+window.onload=function(){var shared=loadFromURL();if(!shared)loadSaved();recalc();if(shared)openSummary();};
 </script></body></html>
